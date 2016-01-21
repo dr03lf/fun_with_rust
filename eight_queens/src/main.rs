@@ -56,7 +56,7 @@ impl Board{
 
     fn print_line(&self) {
         print!("\n+");
-        for i in 0..self.size {
+        for _i in 0..self.size {
             print!("---+");
         }
         print!("\n");
