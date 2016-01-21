@@ -162,7 +162,7 @@ fn main() {
         for j in 0..8 {
             let mut board = Board::new();
             let mut history = History { h: vec![] };
-            find_my_queens(&mut board, &mut history, j, i);
+            find_my_queens(&mut board, &mut history, i, j);
         }
     }
 }
