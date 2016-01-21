@@ -1,17 +1,20 @@
 use std::cmp::Ordering;
+use std::env;
 
 struct History {
     h: Vec<(usize, usize)>
 }
 
 struct Board {
-        board: [usize; 8],
+        board: Vec<usize>,
+        size: usize
 }
 
 impl Board{
-    fn new() -> Board {
+    fn new(size: usize) -> Board {
         Board{
-            board: [8,8,8,8,8,8,8,8]
+            board: vec![size; size],
+            size: size,
         }
     }
 
@@ -29,7 +32,7 @@ impl Board{
 
     fn done(&self) -> bool {
         for i in 0..self.board.len() {
-            if self.board[i] == 8 {
+            if self.board[i] == self.size {
                 return false;
             }
         }
@@ -37,42 +40,48 @@ impl Board{
     }
 
     fn print(&self){
-        println!("\n---------------------------------");
-        for i in 0..8 {
+        self.print_line();
+        for i in 0..self.size {
             print!("|");
-            for j in 0..8 {
+            for j in 0..self.size {
                 match self.get(j).cmp(&i) {
                     Ordering::Equal     => print!(" {} |", "X"),
                     Ordering::Greater   => print!(" {} |", " "),
                     Ordering::Less      => print!(" {} |", " "),
                 }
             }
-            println!("\n---------------------------------");
+            self.print_line();
         }
+    }
+
+    fn print_line(&self) {
+        print!("\n+");
+        for i in 0..self.size {
+            print!("---+");
+        }
+        print!("\n");
     }
 
     fn collision(&self, x: usize, y: usize) -> bool {
         // col
-        if self.get(x) != 8 {
-            //println!("column true");
+        if self.get(x) != self.size {
             return true;
         }
 
-        for i in 0..8 {
+        for i in 0..self.size {
             if self.pos_set(i, y) {
-                //println!("row true");
                 return true;
             }
         }
 
         let mut x_pos;
         let mut y_pos;
-        if x < (7 - y) {
+        if x < (self.size - 1 - y) {
             x_pos = 0;
             y_pos = y + x;
         } else {
-            x_pos = x - (7 - y);
-            y_pos = 7;
+            x_pos = x - (self.size - 1 - y);
+            y_pos = self.size - 1;
         }
 
         loop {
@@ -80,10 +89,7 @@ impl Board{
                 //println!("diag 1 found");
                 return true;
             }
-            if y_pos == 0 {
-                break;
-            }
-            if x_pos == 7 {
+            if y_pos == 0 || x_pos == self.size - 1 {
                 break;
             }
             x_pos = x_pos + 1;
@@ -105,10 +111,7 @@ impl Board{
                 //println!("diag 1 found");
                 return true;
             }
-            if y_pos == 7 {
-                break;
-            }
-            if x_pos == 7 {
+            if y_pos == self.size - 1 || x_pos == self.size - 1 {
                 break;
             }
             x_pos = x_pos + 1;
@@ -126,10 +129,10 @@ fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usi
         return;
     }
 
-    let r = row % 8;
+    let r = row % board.size;
     let mut c = 0;
     let mut found = false;
-    for i in col..8 {
+    for i in col..board.size {
         if !board.collision(i, r){
             c = i;
             found = true;
@@ -141,10 +144,12 @@ fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usi
         board.set(c, r);
         history.h.push((c, r));
         find_my_queens(board, history, r + 1, 0);
+
     } else {
         match history.h.pop() {
             Some((x,_)) => {
-                board.set(x, 8);
+                let size = board.size;
+                board.set(x, size);
                 if r == 0 {
                     find_my_queens(board, history, r, x + 1)
                 } else {
@@ -157,12 +162,19 @@ fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usi
 }
 
 fn main() {
+    let size = 8;
+    let arg = env::args()
+                .nth(1)
+                .map(|x| x.trim().parse());
 
-    for i in 0..8 {
-        for j in 0..8 {
-            let mut board = Board::new();
-            let mut history = History { h: vec![] };
-            find_my_queens(&mut board, &mut history, i, j);
-        }
+    let size = match arg {
+        Some(Ok(n)) => n,
+        _ => size
+    };
+
+    for j in 0..size {
+        let mut board = Board::new(size);
+        let mut history = History { h: vec![] };
+        find_my_queens(&mut board, &mut history, 0, j);
     }
 }
