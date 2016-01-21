@@ -151,13 +151,18 @@ fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usi
                     find_my_queens(board, history, r - 1, x + 1)
                 }
             }
-            None => println!("Nope")
+            None => {}
         }
     }
 }
 
 fn main() {
-    let mut board = Board::new();
-    let mut history = History { h: vec![] };
-    find_my_queens(&mut board, &mut history, 5, 5);
+
+    for i in 0..8 {
+        for j in 0..8 {
+            let mut board = Board::new();
+            let mut history = History { h: vec![] };
+            find_my_queens(&mut board, &mut history, j, i);
+        }
+    }
 }
