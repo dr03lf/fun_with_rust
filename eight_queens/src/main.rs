@@ -1,4 +1,3 @@
-use std::cmp::Ordering;
 use std::env;
 
 struct History {
@@ -44,10 +43,10 @@ impl Board{
         for i in 0..self.size {
             print!("|");
             for j in 0..self.size {
-                match self.get(j).cmp(&i) {
-                    Ordering::Equal     => print!(" {} |", "X"),
-                    Ordering::Greater   => print!(" {} |", " "),
-                    Ordering::Less      => print!(" {} |", " "),
+                if self.get(j) == i{
+                    print!(" {} |", "◉");
+                } else {
+                    print!(" {} |", " ");
                 }
             }
             self.print_line();
@@ -123,9 +122,13 @@ impl Board{
 }
 
 
-fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usize){
-    if board.done() {
-        board.print();
+fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usize, tries: usize){
+    //println!("{:?}", history.h);
+
+    if board.done() || tries == 0 {
+        if board.done() {
+            board.print();
+        }
         return;
     }
 
@@ -143,7 +146,7 @@ fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usi
     if found {
         board.set(c, r);
         history.h.push((c, r));
-        find_my_queens(board, history, r + 1, 0);
+        find_my_queens(board, history, r + 1, 0, tries - 1);
 
     } else {
         match history.h.pop() {
@@ -151,12 +154,14 @@ fn find_my_queens(board: &mut Board, history: &mut History, row: usize, col: usi
                 let size = board.size;
                 board.set(x, size);
                 if r == 0 {
-                    find_my_queens(board, history, r, x + 1)
+                    find_my_queens(board, history, size - 1, (x + 1), tries - 1)
                 } else {
-                    find_my_queens(board, history, r - 1, x + 1)
+                    find_my_queens(board, history, r - 1, (x + 1), tries - 1)
                 }
             }
-            None => {}
+            None => {
+                println!("nope");
+            }
         }
     }
 }
@@ -175,6 +180,29 @@ fn main() {
     for j in 0..size {
         let mut board = Board::new(size);
         let mut history = History { h: vec![] };
-        find_my_queens(&mut board, &mut history, 0, j);
+
+        let mut nextpos = (0, j);
+
+        loop {
+            let (x,y) = nextpos;
+            find_my_queens(&mut board, &mut history, x, y, 15300);
+
+            if board.done() {
+                println!("Positions: {:?}", history.h);
+                break;
+            } else {
+                let h = history.h.last();
+                match h {
+                    Some(xy) => {
+                        let (x, y) = *xy;
+                        nextpos = (x, y + 1);
+                    },
+                    None => {
+                        println!("No last history element :(");
+                        nextpos = (j, 0);
+                    }
+                }
+            }
+        }
     }
 }
